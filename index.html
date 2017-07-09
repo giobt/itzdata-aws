@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="http://sdk.amazonaws.com/js/aws-sdk-2.3.0.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="https://s3-us-west-2.amazonaws.com/itzdata-giorgio/cognitosdk/aws-cognito-sdk.min.js"></script>
+    <script src="https://s3-us-west-2.amazonaws.com/itzdata-giorgio/cognitosdk/amazon-cognito-identity.min.js"></script>
+	<script>
+        // Initialize the Amazon Cognito credentials provider
+        AWS.config.region = 'us-west-2'; // Region
+        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+            IdentityPoolId: 'MY_COGNITO_POOL_ID',
+        });
+        var S3 = new AWS.S3({params: {Bucket: 'itzgio-images'}});
+	</script>
+	<title></title>
+</head>
+<body>
+	Image: <input type="file" id="file-chooser" />
+	<br>
+	Tag name: <input type="text" id="tag-name" />
+	<br>
+	Tag value: <input type="text" id="tag-value" />
+	<br>
+	
+	<button id="upload-button">Upload Image</button>
+    <button id="btnGallery" type="button">gallery</button>
+    
+    <div id="appframe"></div>
+	
+	<script type="text/javascript">
+		// Fetch the tag name from the gallery input
+		function getTagName() {
+		  return document.getElementById('tag-name').value;
+		}
+		
+		// Fetch the tag value from the gallery input
+		function getTagValue() {
+		  return document.getElementById('tag-value').value;
+		}
+		
+		// Grab a reference to the upload button
+		let uploadButton = document.getElementById('upload-button');
+
+		// Make the button respond to clicks
+		uploadButton.addEventListener('click', function() {
+		  let fileChooser = document.getElementById('file-chooser');
+		  let file = fileChooser.files[0];
+
+		  // Check that the user has specified a file to upload
+		  if (!file) {
+			alert("You must choose a file to upload!");
+			return;
+		  }
+
+		  // Check the MIME type is an image
+		  if (file.type.indexOf("image") == -1) {
+			alert("You may only upload images");
+			return;
+		  }
+
+		  // Get the tag name and check that it isn't empty
+		  let tagName = getTagName();
+		  if (!tagName) {
+			alert("You need to enter a tag name");
+			return;
+		  }
+		  
+		  // Get the tag value and check that it isn't empty
+		  let tagValue = getTagValue();
+		  if (!tagValue) {
+			alert("You need to enter a tag value");
+			return;
+		  }
+		  
+		  // specify the metadata for the image
+		  let metadata = {}
+		  metadata[tagName] = tagValue;
+
+		  // Specify the S3 upload parameters
+		  let params = {
+			Key: 'uploads/' + file.name,
+			ContentType: file.type,
+			Body: file,
+			ACL: 'public-read-write',
+			Metadata: metadata
+		  };
+
+		  // Upload the file
+		  S3.upload(params, function(err, data) {
+			if (err) {
+			  alert(err);
+			} else {
+			  alert("Image uploaded successfully!");
+			}
+		  });
+		});
+	</script>
+    <script type="text/javascript">
+       // Prepare to call Lambda function
+       var lambda = new AWS.Lambda({region: 'us-west-2', apiVersion: '2015-03-31'});
+       var pullParams = {
+          FunctionName : 'itzgio-list-s3images',
+          InvocationType : 'RequestResponse',
+          LogType : 'None'
+       };
+        
+        $('#btnGallery').on('click', function(){
+           invokeLambda(); 
+        });
+
+       function invokeLambda() {
+          // Call the Lambda function to collect the image urls
+          lambda.invoke(pullParams, function(err, data) {
+             if (err) {
+                prompt(err);
+             } else {
+                var pullResults = JSON.parse(data.Payload);
+                displayImages(pullResults);
+             }
+          });	
+       }
+
+       function displayImages(pullResults) {
+           $.each(pullResults, function(){
+               console.log(this.ImageUrl);
+               $("#appframe").append("<img src=\""+this.ImageUrl+"\" />");
+           });
+       }
+    </script>
+</body>
+</html>
