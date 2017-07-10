@@ -1131,6 +1131,7 @@ Resources:
             - cognito-identity:*
             - lambda:invokefunction
             - execute-api:*
+            - s3:*
             Resource: "*"
   CognitoRoleAttachment:
     Type: "AWS::Cognito::IdentityPoolRoleAttachment"

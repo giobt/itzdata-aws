@@ -9,7 +9,7 @@
         // Initialize the Amazon Cognito credentials provider
         AWS.config.region = 'us-west-2'; // Region
         AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-            IdentityPoolId: 'MY_COGNITO_POOL_ID',
+            IdentityPoolId: 'us-west-2:93e8c333-b50f-4cd4-b8f7-458328ed2fbf',
         });
         var S3 = new AWS.S3({params: {Bucket: 'itzgio-images'}});
 	</script>
@@ -22,23 +22,23 @@
 	<br>
 	Tag value: <input type="text" id="tag-value" />
 	<br>
-	
+
 	<button id="upload-button">Upload Image</button>
     <button id="btnGallery" type="button">gallery</button>
-    
+
     <div id="appframe"></div>
-	
+
 	<script type="text/javascript">
 		// Fetch the tag name from the gallery input
 		function getTagName() {
 		  return document.getElementById('tag-name').value;
 		}
-		
+
 		// Fetch the tag value from the gallery input
 		function getTagValue() {
 		  return document.getElementById('tag-value').value;
 		}
-		
+
 		// Grab a reference to the upload button
 		let uploadButton = document.getElementById('upload-button');
 
@@ -65,14 +65,14 @@
 			alert("You need to enter a tag name");
 			return;
 		  }
-		  
+
 		  // Get the tag value and check that it isn't empty
 		  let tagValue = getTagValue();
 		  if (!tagValue) {
 			alert("You need to enter a tag value");
 			return;
 		  }
-		  
+
 		  // specify the metadata for the image
 		  let metadata = {}
 		  metadata[tagName] = tagValue;
@@ -104,9 +104,9 @@
           InvocationType : 'RequestResponse',
           LogType : 'None'
        };
-        
+
         $('#btnGallery').on('click', function(){
-           invokeLambda(); 
+           invokeLambda();
         });
 
        function invokeLambda() {
@@ -115,14 +115,15 @@
              if (err) {
                 prompt(err);
              } else {
-                var pullResults = JSON.parse(data.Payload);
-                displayImages(pullResults);
+                displayImages(JSON.parse(data.Payload));
              }
-          });	
+          });
        }
 
        function displayImages(pullResults) {
-           $.each(pullResults, function(){
+				 var urls = JSON.parse(pullResults)
+				 console.log(urls);
+           $.each(urls, function(){
                console.log(this.ImageUrl);
                $("#appframe").append("<img src=\""+this.ImageUrl+"\" />");
            });
