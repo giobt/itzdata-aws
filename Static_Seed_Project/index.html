@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<script src="http://sdk.amazonaws.com/js/aws-sdk-2.3.0.min.js"></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-    <script src="https://s3-us-west-2.amazonaws.com/itzdata-giorgio/cognitosdk/aws-cognito-sdk.min.js"></script>
-    <script src="https://s3-us-west-2.amazonaws.com/itzdata-giorgio/cognitosdk/amazon-cognito-identity.min.js"></script>
+	<script src="https://sdk.amazonaws.com/js/aws-sdk-2.3.0.min.js"></script>
 	<script>
-        // Initialize the Amazon Cognito credentials provider
-        AWS.config.region = 'us-west-2'; // Region
-        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-            IdentityPoolId: 'MY_COGNITO_POOL_ID',
-        });
-        var S3 = new AWS.S3({params: {Bucket: 'itzgio-images'}});
+	AWS.config.update({
+	  accessKeyId: 'AKIAIRGVPJDZOL6TQCFA',
+	  secretAccessKey: '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',
+	  region: 'us-west-2'
+	});
+
+	var S3 = new AWS.S3({params: {Bucket: 'itzgio-images'}});
+	var Dynamo = new AWS.DynamoDB.DocumentClient({region: 'us-west-2'});
 	</script>
 	<title></title>
 </head>
@@ -24,11 +23,11 @@
 	<br>
 	
 	<button id="upload-button">Upload Image</button>
-    <button id="btnGallery" type="button">gallery</button>
-    
-    <div id="appframe"></div>
+	<button id="list-images">List images</button>
+
+	<ul id="image-list" />
 	
-	<script type="text/javascript">
+	<script>
 		// Fetch the tag name from the gallery input
 		function getTagName() {
 		  return document.getElementById('tag-name').value;
@@ -96,37 +95,5 @@
 		  });
 		});
 	</script>
-    <script type="text/javascript">
-       // Prepare to call Lambda function
-       var lambda = new AWS.Lambda({region: 'us-west-2', apiVersion: '2015-03-31'});
-       var pullParams = {
-          FunctionName : 'itzgio-list-s3images',
-          InvocationType : 'RequestResponse',
-          LogType : 'None'
-       };
-        
-        $('#btnGallery').on('click', function(){
-           invokeLambda(); 
-        });
-
-       function invokeLambda() {
-          // Call the Lambda function to collect the image urls
-          lambda.invoke(pullParams, function(err, data) {
-             if (err) {
-                prompt(err);
-             } else {
-                var pullResults = JSON.parse(data.Payload);
-                displayImages(pullResults);
-             }
-          });	
-       }
-
-       function displayImages(pullResults) {
-           $.each(pullResults, function(){
-               console.log(this.ImageUrl);
-               $("#appframe").append("<img src=\""+this.ImageUrl+"\" />");
-           });
-       }
-    </script>
 </body>
 </html>
